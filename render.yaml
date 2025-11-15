@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: pet-help-center-backend
+    env: docker
+    region: oregon
+    plan: free
+    repo: https://github.com/sameeksha111/project.git
+    branch: main
+    autoDeploy: true
+    dockerfilePath: Dockerfile
+    startCommand: "node server.js"
+    envVars:
+      - key: MONGODB_URI
+        fromSecret: MONGODB_URI
+      - key: NODE_ENV
+        value: production
