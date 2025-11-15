@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - PHCS</title>
+  <link rel="stylesheet" href="../public/css/style.css">
+  <link rel="stylesheet" href="../public/css/dashboard.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2><i class="fas fa-paw"></i> PHCS</h2>
+      </div>
+      <nav class="sidebar-nav">
+        <ul>
+          <li><a href="#dashboard" class="active"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+          <li><a href="#cases"><i class="fas fa-folder"></i> All Cases</a></li>
+          <li><a href="#create-case"><i class="fas fa-plus-circle"></i> Create Case</a></li>
+          <li><a href="#assignments"><i class="fas fa-tasks"></i> Assignments</a></li>
+          <li><a href="#reports"><i class="fas fa-chart-bar"></i> Reports</a></li>
+          <li><a href="#users"><i class="fas fa-users"></i> Users</a></li>
+          <li><a href="#trash"><i class="fas fa-trash"></i> Trash</a></li>
+          <li><a href="#logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <div class="top-bar">
+        <div class="search-bar">
+          <input type="text" id="globalSearch" placeholder="Search cases...">
+          <i class="fas fa-search"></i>
+        </div>
+        <div class="top-bar-right">
+          <button id="notificationBell" class="btn-icon">
+            <i class="fas fa-bell"></i>
+            <span class="notification-badge">3</span>
+          </button>
+          <div class="user-menu">
+            <img src="https://via.placeholder.com/40" alt="User Avatar">
+            <span id="userName">Admin</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard Content -->
+      <div class="dashboard-content">
+        <!-- KPI Cards -->
+        <section class="kpi-cards">
+          <div class="card kpi-card">
+            <div class="card-icon bg-blue">
+              <i class="fas fa-cases"></i>
+            </div>
+            <div class="card-content">
+              <h3>Total Cases</h3>
+              <p class="kpi-value" id="totalCases">0</p>
+            </div>
+          </div>
+
+          <div class="card kpi-card">
+            <div class="card-icon bg-green">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="card-content">
+              <h3>Resolved Cases</h3>
+              <p class="kpi-value" id="resolvedCases">0</p>
+            </div>
+          </div>
+
+          <div class="card kpi-card">
+            <div class="card-icon bg-red">
+              <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <div class="card-content">
+              <h3>Open Cases</h3>
+              <p class="kpi-value" id="openCases">0</p>
+            </div>
+          </div>
+
+          <div class="card kpi-card">
+            <div class="card-icon bg-orange">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="card-content">
+              <h3>Active Staff</h3>
+              <p class="kpi-value" id="activeStaff">0</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Charts Section -->
+        <section class="charts-section">
+          <div class="card">
+            <h3>Priority Breakdown</h3>
+            <canvas id="priorityChart"></canvas>
+          </div>
+
+          <div class="card">
+            <h3>Species Distribution</h3>
+            <canvas id="speciesChart"></canvas>
+          </div>
+        </section>
+
+        <!-- Recent Cases Table -->
+        <section class="card">
+          <h3>Recent Cases</h3>
+          <table class="cases-table">
+            <thead>
+              <tr>
+                <th>Case ID</th>
+                <th>Pet Name</th>
+                <th>Owner</th>
+                <th>Issue Type</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Assigned To</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="recentCasesTable">
+              <tr>
+                <td colspan="8" class="text-center">Loading...</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="../public/js/app.js"></script>
+  <script src="../public/js/api.js"></script>
+  <script src="../public/js/charts.js"></script>
+  <script>
+    // Initialize Admin Dashboard
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = JSON.parse(localStorage.getItem('user'));
+      document.getElementById('userName').textContent = user.fullName;
+
+      // Load dashboard data
+      loadDashboardMetrics();
+      loadRecentCases();
+    });
+
+    async function loadDashboardMetrics() {
+      try {
+        const response = await apiCall('/api/reports/summary', 'GET');
+        const { summary, speciesBreakdown, priorityBreakdown } = response;
+
+        document.getElementById('totalCases').textContent = summary.totalCases;
+        document.getElementById('resolvedCases').textContent = summary.resolvedCases;
+        document.getElementById('openCases').textContent = summary.openCases;
+
+        // Charts
+        createPriorityChart(priorityBreakdown);
+        createSpeciesChart(speciesBreakdown);
+      } catch (error) {
+        console.error('Error loading metrics:', error);
+      }
+    }
+
+    async function loadRecentCases() {
+      try {
+        const response = await apiCall('/api/cases?limit=10', 'GET');
+        const tbody = document.getElementById('recentCasesTable');
+        tbody.innerHTML = '';
+
+        response.cases.forEach(caseItem => {
+          const row = `
+            <tr>
+              <td>${caseItem.caseId}</td>
+              <td>${caseItem.petName}</td>
+              <td>${caseItem.ownerName}</td>
+              <td>${caseItem.issueType}</td>
+              <td><span class="badge badge-${caseItem.priority}">${caseItem.priority}</span></td>
+              <td><span class="badge badge-${caseItem.status}">${caseItem.status}</span></td>
+              <td>${caseItem.assignedTo ? caseItem.assignedTo.fullName : 'Unassigned'}</td>
+              <td>
+                <button class="btn-small" onclick="viewCase('${caseItem._id}')">View</button>
+                <button class="btn-small" onclick="editCase('${caseItem._id}')">Edit</button>
+              </td>
+            </tr>
+          `;
+          tbody.innerHTML += row;
+        });
+      } catch (error) {
+        console.error('Error loading cases:', error);
+      }
+    }
+
+    function viewCase(caseId) {
+      window.location.href = `/case-detail.html?id=${caseId}`;
+    }
+
+    function editCase(caseId) {
+      window.location.href = `/case-detail.html?id=${caseId}&edit=true`;
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login.html';
+    }
+  </script>
+</body>
+</html>
