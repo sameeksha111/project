@@ -14,17 +14,25 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(path.join(__dirname)));
 
 // ============ DATABASE CONNECTION ============
-const connectDB = require('./db');
-connectDB();
+try {
+  const connectDB = require('./db');
+  connectDB();
+} catch (err) {
+  console.error('❌ Database module error:', err.message);
+}
 
 // ============ ROUTES ============
-app.use('/api/auth', require('./routes/auth2'));
-app.use('/api/cases', require('./routes/cases'));
-app.use('/api/users', require('./routes/users'));
-app.use('/api/comments', require('./routes/comments'));
-app.use('/api/assignments', require('./routes/assignments'));
-app.use('/api/reports', require('./routes/reports'));
-app.use('/api/notifications', require('./routes/notifications'));
+try {
+  app.use('/api/auth', require('./routes/auth2'));
+  app.use('/api/cases', require('./routes/cases'));
+  app.use('/api/users', require('./routes/users'));
+  app.use('/api/comments', require('./routes/comments'));
+  app.use('/api/assignments', require('./routes/assignments'));
+  app.use('/api/reports', require('./routes/reports'));
+  app.use('/api/notifications', require('./routes/notifications'));
+} catch (err) {
+  console.error('❌ Route loading error:', err.message);
+}
 
 // ============ SERVE FRONTEND PAGES ============
 app.get('/', (req, res) => {
@@ -38,7 +46,7 @@ app.use((req, res) => {
 
 // ============ START SERVER ============
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`
   🚀 ========================================
      Pet Help Center - PHCS
@@ -47,4 +55,9 @@ app.listen(PORT, () => {
      🔧 API: http://localhost:${PORT}/api
   ========================================
   `);
+});
+
+server.on('error', (err) => {
+  console.error('❌ Server error:', err.message);
+  process.exit(1);
 });
