@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const mongoose = require('mongoose');
 require('dotenv').config();
 const path = require('path');
 
@@ -15,13 +14,8 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(path.join(__dirname)));
 
 // ============ DATABASE CONNECTION ============
-const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/pet-help-center';
-mongoose.connect(mongoUri, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('✅ MongoDB Connected'))
-.catch(err => console.error('❌ MongoDB Error:', err));
+const connectDB = require('./db');
+connectDB();
 
 // ============ ROUTES ============
 app.use('/api/auth', require('./routes/auth2'));
