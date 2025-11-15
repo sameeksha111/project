@@ -34,13 +34,13 @@ const loadRoute = (path, name) => {
 };
 
 // Load and mount routes
-const auth2Route = loadRoute('./routes/auth2', 'auth2 route');
-const casesRoute = loadRoute('./routes/cases', 'cases route');
-const usersRoute = loadRoute('./routes/users', 'users route');
-const commentsRoute = loadRoute('./routes/comments', 'comments route');
-const assignmentsRoute = loadRoute('./routes/assignments', 'assignments route');
-const reportsRoute = loadRoute('./routes/reports', 'reports route');
-const notificationsRoute = loadRoute('./routes/notifications', 'notifications route');
+const auth2Route = loadRoute('./routes/auth-mock', 'auth-mock route');
+const casesRoute = loadRoute('./routes/cases-mock', 'cases-mock route');
+const usersRoute = loadRoute('./routes/users-mock', 'users-mock route');
+const commentsRoute = loadRoute('./routes/comments-mock', 'comments-mock route');
+const assignmentsRoute = loadRoute('./routes/assignments-mock', 'assignments-mock route');
+const reportsRoute = loadRoute('./routes/reports-mock', 'reports-mock route');
+const notificationsRoute = loadRoute('./routes/notifications-mock', 'notifications-mock route');
 
 // Mount routes if they loaded successfully
 if (auth2Route) app.use('/api/auth', auth2Route);
