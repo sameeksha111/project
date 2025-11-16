@@ -687,11 +687,6 @@ function showAlert(message, type = 'info') {
 }
 
 console.log('✅ Pet Help Center app.js loaded successfully');
-  const headers = { 'Content-Type': 'application/json' };
-  
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
 
   const options = { method, headers };
   if (data) options.body = JSON.stringify(data);
