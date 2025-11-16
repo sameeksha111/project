@@ -14,4 +14,4 @@ ENV NODE_ENV=production
 EXPOSE 5000
 
 # Start the server
-CMD ["node", "server.js"]
+CMD ["node", "simple-server.js"]
