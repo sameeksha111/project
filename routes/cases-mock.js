@@ -3,7 +3,143 @@ const router = express.Router();
 
 // ============ IN-MEMORY CASES STORE ============
 const cases = new Map();
-let caseCounter = 1000;
+let caseCounter = 1005;
+
+// Initialize with sample cases
+function initSampleCases() {
+  const sampleCases = [
+    {
+      _id: 'CASE-1000',
+      caseId: 'CASE-1000',
+      ownerName: 'John Smith',
+      ownerPhone: '555-0101',
+      ownerEmail: 'john.smith@example.com',
+      ownerAddress: '123 Main St, Springfield',
+      petName: 'Max',
+      petSpecies: 'Dog',
+      petBreed: 'Golden Retriever',
+      petAge: 3,
+      petColor: 'Golden',
+      issueType: 'Injury',
+      description: 'Dog has a limp in front left leg',
+      source: 'web',
+      location: 'Springfield',
+      status: 'open',
+      priority: 'high',
+      createdBy: 'user1',
+      createdAt: new Date(new Date().getTime() - 2 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(new Date().getTime() - 2 * 24 * 60 * 60 * 1000),
+      comments: [],
+      assignedTo: []
+    },
+    {
+      _id: 'CASE-1001',
+      caseId: 'CASE-1001',
+      ownerName: 'Sarah Johnson',
+      ownerPhone: '555-0102',
+      ownerEmail: 'sarah.j@example.com',
+      ownerAddress: '456 Oak Ave, Shelbyville',
+      petName: 'Luna',
+      petSpecies: 'Cat',
+      petBreed: 'Persian',
+      petAge: 5,
+      petColor: 'White',
+      issueType: 'Illness',
+      description: 'Cat not eating, seems lethargic',
+      source: 'phone',
+      location: 'Shelbyville',
+      status: 'closed',
+      priority: 'high',
+      createdBy: 'user1',
+      createdAt: new Date(new Date().getTime() - 5 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(new Date().getTime() - 1 * 24 * 60 * 60 * 1000),
+      closedAt: new Date(new Date().getTime() - 1 * 24 * 60 * 60 * 1000),
+      closedBy: 'staff1',
+      comments: [],
+      assignedTo: []
+    },
+    {
+      _id: 'CASE-1002',
+      caseId: 'CASE-1002',
+      ownerName: 'Michael Chen',
+      ownerPhone: '555-0103',
+      ownerEmail: 'mchen@example.com',
+      ownerAddress: '789 Pine Road, Capital City',
+      petName: 'Rocky',
+      petSpecies: 'Dog',
+      petBreed: 'German Shepherd',
+      petAge: 4,
+      petColor: 'Brown',
+      issueType: 'Behavioral',
+      description: 'Dog is aggressive towards other dogs',
+      source: 'web',
+      location: 'Capital City',
+      status: 'open',
+      priority: 'medium',
+      createdBy: 'user1',
+      createdAt: new Date(new Date().getTime() - 1 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(new Date().getTime() - 1 * 24 * 60 * 60 * 1000),
+      comments: [],
+      assignedTo: []
+    },
+    {
+      _id: 'CASE-1003',
+      caseId: 'CASE-1003',
+      ownerName: 'Emily Davis',
+      ownerPhone: '555-0104',
+      ownerEmail: 'emily.d@example.com',
+      ownerAddress: '321 Elm Street, Metropolis',
+      petName: 'Whiskers',
+      petSpecies: 'Cat',
+      petBreed: 'Tabby',
+      petAge: 2,
+      petColor: 'Orange',
+      issueType: 'Injury',
+      description: 'Cat has a cut on hind leg',
+      source: 'phone',
+      location: 'Metropolis',
+      status: 'closed',
+      priority: 'medium',
+      createdBy: 'user1',
+      createdAt: new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(new Date().getTime() - 3 * 24 * 60 * 60 * 1000),
+      closedAt: new Date(new Date().getTime() - 3 * 24 * 60 * 60 * 1000),
+      closedBy: 'staff1',
+      comments: [],
+      assignedTo: []
+    },
+    {
+      _id: 'CASE-1004',
+      caseId: 'CASE-1004',
+      ownerName: 'David Wilson',
+      ownerPhone: '555-0105',
+      ownerEmail: 'dwilson@example.com',
+      ownerAddress: '555 Birch Lane, Gotham',
+      petName: 'Buddy',
+      petSpecies: 'Dog',
+      petBreed: 'Labrador',
+      petAge: 6,
+      petColor: 'Black',
+      issueType: 'Illness',
+      description: 'Dog has diarrhea and vomiting',
+      source: 'web',
+      location: 'Gotham',
+      status: 'open',
+      priority: 'high',
+      createdAt: new Date(new Date().getTime() - 0.5 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(new Date().getTime() - 0.5 * 24 * 60 * 60 * 1000),
+      createdBy: 'user1',
+      comments: [],
+      assignedTo: []
+    }
+  ];
+
+  sampleCases.forEach(c => cases.set(c.caseId, c));
+  console.log('✓ Loaded 5 sample cases');
+}
+
+// Initialize sample cases on startup
+initSampleCases();
 
 // Mock auth middleware
 const auth = (req, res, next) => {
