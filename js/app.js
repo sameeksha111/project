@@ -277,6 +277,16 @@ async function loadCases() {
     cases.forEach(c => {
       const statusClass = c.status === 'closed' ? 'status-closed' : 'status-open';
       const statusLabel = c.status === 'closed' ? '✓ Closed' : '🔴 Open';
+      const isStaff = currentUser?.role === 'staff' || currentUser?.role === 'admin';
+      
+      // Close button only for staff
+      let closeButtonHtml = '';
+      if (c.status === 'open' && isStaff) {
+        closeButtonHtml = `<button class="btn btn-small btn-success" onclick="closeCase('${c.caseId || c._id}')">✓ Close</button>`;
+      } else if (c.status === 'closed' && isStaff) {
+        closeButtonHtml = `<button class="btn btn-small btn-secondary" onclick="reopenCase('${c.caseId || c._id}')">↻ Reopen</button>`;
+      }
+      
       html += `
         <div class="case-card ${statusClass}">
           <div class="case-header">
@@ -293,10 +303,7 @@ async function loadCases() {
             ${c.closedAt ? `<p><strong>Closed:</strong> ${new Date(c.closedAt).toLocaleDateString()}</p>` : ''}
           </div>
           <div class="case-actions">
-            ${c.status === 'open' ? 
-              `<button class="btn btn-small btn-success" onclick="closeCase('${c.caseId || c._id}')">Close Case</button>` :
-              `<button class="btn btn-small btn-secondary" onclick="reopenCase('${c.caseId || c._id}')">Reopen Case</button>`
-            }
+            ${closeButtonHtml}
             <button class="btn btn-small btn-info" onclick="viewCaseDetails('${c.caseId || c._id}')">View Details</button>
           </div>
         </div>
@@ -311,6 +318,12 @@ async function loadCases() {
 }
 
 async function closeCase(caseId) {
+  // Check if user is staff
+  if (currentUser?.role !== 'staff' && currentUser?.role !== 'admin') {
+    showAlert('Only staff can close cases', 'error');
+    return;
+  }
+  
   const confirm = window.confirm('Are you sure you want to close this case?');
   if (!confirm) return;
   
@@ -324,6 +337,12 @@ async function closeCase(caseId) {
 }
 
 async function reopenCase(caseId) {
+  // Check if user is staff
+  if (currentUser?.role !== 'staff' && currentUser?.role !== 'admin') {
+    showAlert('Only staff can reopen cases', 'error');
+    return;
+  }
+  
   const confirm = window.confirm('Are you sure you want to reopen this case?');
   if (!confirm) return;
   
@@ -381,10 +400,11 @@ async function viewCaseDetails(caseId) {
       </div>
       
       <div class="case-actions">
-        ${c.status === 'open' ? 
-          `<button class="btn btn-success" onclick="closeCase('${c.caseId || c._id}')">✓ Close Case</button>` :
-          `<button class="btn btn-secondary" onclick="reopenCase('${c.caseId || c._id}')">🔄 Reopen Case</button>`
-        }
+        ${(currentUser?.role === 'staff' || currentUser?.role === 'admin') ? (
+          c.status === 'open' ? 
+            `<button class="btn btn-success" onclick="closeCase('${c.caseId || c._id}')">✓ Close Case</button>` :
+            `<button class="btn btn-secondary" onclick="reopenCase('${c.caseId || c._id}')">🔄 Reopen Case</button>`
+        ) : '<p style="color: #999; font-size: 12px;">Only staff can close cases</p>'}
         <button class="btn btn-danger" onclick="if(confirm('Delete this case?')) deleteCase('${c.caseId || c._id}')">Delete Case</button>
       </div>
     </div>

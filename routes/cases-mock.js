@@ -11,8 +11,25 @@ const auth = (req, res, next) => {
   if (!token) {
     return res.status(401).json({ error: 'No token provided' });
   }
-  // For now, just accept any token
-  req.user = { id: 'user1', role: 'staff' };
+  // For now, just accept any token and extract user info
+  req.user = { id: 'user1', role: 'staff', email: 'user@example.com' };
+  next();
+};
+
+// Staff-only middleware
+const staffOnly = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ error: 'No token provided' });
+  }
+  // Check if user role is staff or admin (in real app, decode JWT to get actual role)
+  // For now, we'll accept staff as default
+  req.user = { id: 'user1', role: 'staff', email: 'user@example.com' };
+  
+  // In production, check decoded JWT role
+  if (req.user.role !== 'staff' && req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Only staff can perform this action' });
+  }
   next();
 };
 
@@ -111,8 +128,8 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
-// Close case (mark as completed)
-router.patch('/:id/close', auth, async (req, res) => {
+// Close case (mark as completed) - STAFF ONLY
+router.patch('/:id/close', staffOnly, async (req, res) => {
   try {
     const caseData = cases.get(req.params.id);
     if (!caseData) {
@@ -139,8 +156,8 @@ router.patch('/:id/close', auth, async (req, res) => {
   }
 });
 
-// Reopen case (if needed)
-router.patch('/:id/reopen', auth, async (req, res) => {
+// Reopen case (if needed) - STAFF ONLY
+router.patch('/:id/reopen', staffOnly, async (req, res) => {
   try {
     const caseData = cases.get(req.params.id);
     if (!caseData) {
