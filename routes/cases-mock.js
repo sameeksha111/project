@@ -111,6 +111,62 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
+// Close case (mark as completed)
+router.patch('/:id/close', auth, async (req, res) => {
+  try {
+    const caseData = cases.get(req.params.id);
+    if (!caseData) {
+      return res.status(404).json({ error: 'Case not found' });
+    }
+
+    const closedCase = {
+      ...caseData,
+      status: 'closed',
+      closedAt: new Date(),
+      closedBy: req.user?.id,
+      updatedAt: new Date()
+    };
+
+    cases.set(req.params.id, closedCase);
+
+    res.json({
+      message: 'Case closed successfully',
+      case: closedCase
+    });
+  } catch (error) {
+    console.error('Close case error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Reopen case (if needed)
+router.patch('/:id/reopen', auth, async (req, res) => {
+  try {
+    const caseData = cases.get(req.params.id);
+    if (!caseData) {
+      return res.status(404).json({ error: 'Case not found' });
+    }
+
+    const reopenedCase = {
+      ...caseData,
+      status: 'open',
+      closedAt: null,
+      closedBy: null,
+      updatedAt: new Date()
+    };
+
+    cases.set(req.params.id, reopenedCase);
+
+    res.json({
+      message: 'Case reopened successfully',
+      case: reopenedCase
+    });
+  } catch (error) {
+    console.error('Reopen case error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Delete case
 router.delete('/:id', auth, async (req, res) => {
   try {

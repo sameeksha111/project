@@ -271,18 +271,134 @@ async function loadDashboard() {
 async function loadCases() {
   const cases = await apiCall('/cases');
   let html = '<div style="margin: 1rem 0;"><button class="btn btn-primary" onclick="showPage(\'new-case\')">+ New Case</button></div>';
-  html += '<table class="table"><tr><th>ID</th><th>Pet</th><th>Owner</th><th>Status</th><th>Priority</th></tr>';
+  html += '<div class="cases-container">';
   
   if (cases && cases.length > 0) {
     cases.forEach(c => {
-      html += `<tr><td>${c.caseId || c._id}</td><td>${c.petName}</td><td>${c.ownerName}</td><td>${c.status}</td><td><span class="badge">${c.priority}</span></td></tr>`;
+      const statusClass = c.status === 'closed' ? 'status-closed' : 'status-open';
+      const statusLabel = c.status === 'closed' ? '✓ Closed' : '🔴 Open';
+      html += `
+        <div class="case-card ${statusClass}">
+          <div class="case-header">
+            <h4>${c.caseId || c._id}</h4>
+            <span class="status-badge ${statusClass}">${statusLabel}</span>
+          </div>
+          <div class="case-body">
+            <p><strong>Pet:</strong> ${c.petName}</p>
+            <p><strong>Owner:</strong> ${c.ownerName}</p>
+            <p><strong>Issue:</strong> ${c.issueType}</p>
+            <p><strong>Description:</strong> ${c.description}</p>
+            <p><strong>Priority:</strong> <span class="priority-badge">${c.priority}</span></p>
+            <p><strong>Created:</strong> ${new Date(c.createdAt).toLocaleDateString()}</p>
+            ${c.closedAt ? `<p><strong>Closed:</strong> ${new Date(c.closedAt).toLocaleDateString()}</p>` : ''}
+          </div>
+          <div class="case-actions">
+            ${c.status === 'open' ? 
+              `<button class="btn btn-small btn-success" onclick="closeCase('${c.caseId || c._id}')">Close Case</button>` :
+              `<button class="btn btn-small btn-secondary" onclick="reopenCase('${c.caseId || c._id}')">Reopen Case</button>`
+            }
+            <button class="btn btn-small btn-info" onclick="viewCaseDetails('${c.caseId || c._id}')">View Details</button>
+          </div>
+        </div>
+      `;
     });
   } else {
-    html += '<tr><td colspan="5">No cases found</td></tr>';
+    html += '<p>No cases found. <a href="#" onclick="showPage(\'new-case\')">Create one</a></p>';
   }
   
-  html += '</table>';
+  html += '</div>';
   document.getElementById('page-content').innerHTML = '<h2>Cases</h2>' + html;
+}
+
+async function closeCase(caseId) {
+  const confirm = window.confirm('Are you sure you want to close this case?');
+  if (!confirm) return;
+  
+  const result = await apiCall(`/cases/${caseId}/close`, 'PATCH', {});
+  if (result) {
+    showAlert('Case closed successfully!', 'success');
+    loadCases();
+  } else {
+    showAlert('Failed to close case', 'error');
+  }
+}
+
+async function reopenCase(caseId) {
+  const confirm = window.confirm('Are you sure you want to reopen this case?');
+  if (!confirm) return;
+  
+  const result = await apiCall(`/cases/${caseId}/reopen`, 'PATCH', {});
+  if (result) {
+    showAlert('Case reopened successfully!', 'success');
+    loadCases();
+  } else {
+    showAlert('Failed to reopen case', 'error');
+  }
+}
+
+async function viewCaseDetails(caseId) {
+  const caseData = await apiCall(`/cases/${caseId}`);
+  if (!caseData) {
+    showAlert('Failed to load case details', 'error');
+    return;
+  }
+  
+  const c = caseData.case || caseData;
+  const statusLabel = c.status === 'closed' ? '✓ Closed' : '🔴 Open';
+  
+  const content = document.getElementById('page-content');
+  content.innerHTML = `
+    <h2>Case Details: ${c.caseId || c._id}</h2>
+    <button class="btn btn-secondary" onclick="showPage('cases')">← Back to Cases</button>
+    
+    <div style="max-width: 800px; margin: 2rem 0;">
+      <div class="detail-card">
+        <h3>Pet Information</h3>
+        <p><strong>Name:</strong> ${c.petName}</p>
+        <p><strong>Species:</strong> ${c.petSpecies}</p>
+        <p><strong>Breed:</strong> ${c.petBreed}</p>
+        <p><strong>Age:</strong> ${c.petAge || 'N/A'}</p>
+        <p><strong>Color:</strong> ${c.petColor || 'N/A'}</p>
+      </div>
+      
+      <div class="detail-card">
+        <h3>Owner Information</h3>
+        <p><strong>Name:</strong> ${c.ownerName}</p>
+        <p><strong>Email:</strong> ${c.ownerEmail}</p>
+        <p><strong>Phone:</strong> ${c.ownerPhone}</p>
+        <p><strong>Address:</strong> ${c.ownerAddress || 'N/A'}</p>
+      </div>
+      
+      <div class="detail-card">
+        <h3>Case Information</h3>
+        <p><strong>Status:</strong> <span class="badge">${statusLabel}</span></p>
+        <p><strong>Priority:</strong> <span class="priority-badge">${c.priority}</span></p>
+        <p><strong>Issue Type:</strong> ${c.issueType}</p>
+        <p><strong>Description:</strong> ${c.description}</p>
+        <p><strong>Location:</strong> ${c.location || 'N/A'}</p>
+        <p><strong>Created:</strong> ${new Date(c.createdAt).toLocaleDateString()}</p>
+        ${c.closedAt ? `<p><strong>Closed:</strong> ${new Date(c.closedAt).toLocaleDateString()}</p>` : ''}
+      </div>
+      
+      <div class="case-actions">
+        ${c.status === 'open' ? 
+          `<button class="btn btn-success" onclick="closeCase('${c.caseId || c._id}')">✓ Close Case</button>` :
+          `<button class="btn btn-secondary" onclick="reopenCase('${c.caseId || c._id}')">🔄 Reopen Case</button>`
+        }
+        <button class="btn btn-danger" onclick="if(confirm('Delete this case?')) deleteCase('${c.caseId || c._id}')">Delete Case</button>
+      </div>
+    </div>
+  `;
+}
+
+async function deleteCase(caseId) {
+  const result = await apiCall(`/cases/${caseId}`, 'DELETE');
+  if (result) {
+    showAlert('Case deleted successfully!', 'success');
+    showPage('cases');
+  } else {
+    showAlert('Failed to delete case', 'error');
+  }
 }
 
 async function loadUsers() {
